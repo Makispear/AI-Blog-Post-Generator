@@ -1,8 +1,12 @@
 import os
 import sys
 
-import dotenv
 from crewai import Agent, Crew, Process, Task
+
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    load_dotenv = None
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -13,9 +17,17 @@ DEFAULT_TOPIC = "AI in healthcare in 2026"
 
 
 def load_environment() -> None:
-    dotenv.load_dotenv()
+    if os.getenv("OPENAI_API_KEY"):
+        return
+
+    if load_dotenv is not None:
+        load_dotenv()
+
     if not os.getenv("OPENAI_API_KEY"):
-        raise ValueError("OPENAI_API_KEY is not set in .env")
+        raise ValueError(
+            "OPENAI_API_KEY is not set. In production, configure it as an environment variable "
+            "or secret. For local development, add it to .env and install python-dotenv."
+        )
 
 
 def generate_blog_post(topic: str = DEFAULT_TOPIC, verbose: bool = True) -> str:
